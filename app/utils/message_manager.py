@@ -6,49 +6,39 @@ from aiogram.types import InlineKeyboardMarkup, InputMediaVideo, MessageEntity
 logger = logging.getLogger(__name__)
 
 class MessageManager:
-    """Менеджер для управления сообщениями бота"""
     
     def __init__(self):
-        self.user_main_messages: Dict[int, int] = {}  # {user_id: message_id}
-        self.last_question_message_id: Dict[int, int] = {}  # {user_id: message_id}
-        self.success_message_id: Dict[int, int] = {}  # {user_id: message_id}
+        self.user_main_messages: Dict[int, int] = {}
+        self.last_question_message_id: Dict[int, int] = {}
+        self.success_message_id: Dict[int, int] = {}
     
     def set_main_message(self, user_id: int, message_id: int) -> None:
-        """Установка ID главного сообщения пользователя"""
         self.user_main_messages[user_id] = message_id
     
     def get_main_message(self, user_id: int) -> Optional[int]:
-        """Получение ID главного сообщения пользователя"""
         return self.user_main_messages.get(user_id)
     
     def clear_main_message(self, user_id: int) -> None:
-        """Очистка ID главного сообщения пользователя"""
         if user_id in self.user_main_messages:
             del self.user_main_messages[user_id]
     
     def set_last_question(self, user_id: int, message_id: int) -> None:
-        """Установка ID последнего вопроса"""
         self.last_question_message_id[user_id] = message_id
     
     def get_last_question(self, user_id: int) -> Optional[int]:
-        """Получение ID последнего вопроса"""
         return self.last_question_message_id.get(user_id)
     
     def clear_last_question(self, user_id: int) -> None:
-        """Очистка ID последнего вопроса"""
         if user_id in self.last_question_message_id:
             del self.last_question_message_id[user_id]
     
     def set_success_message(self, user_id: int, message_id: int) -> None:
-        """Установка ID сообщения об успехе"""
         self.success_message_id[user_id] = message_id
     
     def get_success_message(self, user_id: int) -> Optional[int]:
-        """Получение ID сообщения об успехе"""
         return self.success_message_id.get(user_id)
     
     def clear_success_message(self, user_id: int) -> None:
-        """Очистка ID сообщения об успехе"""
         if user_id in self.success_message_id:
             del self.success_message_id[user_id]
     
@@ -61,7 +51,6 @@ class MessageManager:
         bot: Optional[Bot] = None,
         entities: Optional[List[MessageEntity]] = None,
     ) -> bool:
-        """Редактирование главного сообщения пользователя"""
         try:
             if message_id is None:
                 message_id = self.get_main_message(user_id)
@@ -69,7 +58,6 @@ class MessageManager:
             if message_id is None or bot is None:
                 return False
 
-            # 1) Пытаемся отредактировать как текстовое сообщение
             try:
                 await bot.edit_message_text(
                     chat_id=user_id,
@@ -81,7 +69,6 @@ class MessageManager:
                 )
                 return True
             except Exception as edit_text_err:
-                # 2) Если сообщение было медиа — пробуем отредактировать подпись
                 try:
                     await bot.edit_message_caption(
                         chat_id=user_id,
@@ -93,7 +80,6 @@ class MessageManager:
                     )
                     return True
                 except Exception as edit_caption_err:
-                    # 3) В крайнем случае — отправляем новое сообщение и запоминаем его как главное
                     try:
                         sent = await bot.send_message(
                             chat_id=user_id,
@@ -123,16 +109,12 @@ class MessageManager:
         bot: Optional[Bot] = None,
         caption_entities: Optional[List[MessageEntity]] = None,
     ) -> bool:
-        """Показывает (или заменяет) главное сообщение на видео с подписью.
-        Если редактирование невозможно, отправляет новое и запоминает его как главное.
-        """
         try:
             if bot is None:
                 return False
 
             main_id = self.get_main_message(user_id)
             if main_id:
-                # Попытка заменить медиа
                 try:
                     media = InputMediaVideo(
                         media=video_url,
@@ -148,7 +130,6 @@ class MessageManager:
                     )
                     return True
                 except Exception:
-                    # Если нельзя заменить (например, предыдущее сообщение было текстом)
                     pass
 
             sent = await bot.send_video(
@@ -167,10 +148,6 @@ class MessageManager:
 
     @staticmethod
     def build_custom_emoji_entities(text: str, emoji_char_to_id: Dict[str, str]) -> List[MessageEntity]:
-        """Создает entities для кастомных (premium) эмодзи по их символам в тексте.
-        emoji_char_to_id: {"🎨": "custom_emoji_id", ...}
-        Возвращает список MessageEntity с корректными UTF-16 offset/length.
-        """
         entities: List[MessageEntity] = []
         if not emoji_char_to_id:
             return entities
@@ -201,7 +178,6 @@ class MessageManager:
         message_id: int, 
         bot: Bot
     ) -> bool:
-        """Удаление сообщения"""
         try:
             await bot.delete_message(user_id, message_id)
             return True
@@ -210,7 +186,6 @@ class MessageManager:
             return False
     
     async def delete_last_question(self, user_id: int, bot: Bot) -> bool:
-        """Удаление последнего вопроса"""
         message_id = self.get_last_question(user_id)
         if message_id:
             success = await self.delete_message(user_id, message_id, bot)
@@ -220,7 +195,6 @@ class MessageManager:
         return False
     
     async def delete_success_message(self, user_id: int, bot: Bot) -> bool:
-        """Удаление сообщения об успехе"""
         message_id = self.get_success_message(user_id)
         if message_id:
             success = await self.delete_message(user_id, message_id, bot)
@@ -230,18 +204,15 @@ class MessageManager:
         return False
     
     def clear_user_data(self, user_id: int) -> None:
-        """Очистка всех данных пользователя"""
         self.clear_main_message(user_id)
         self.clear_last_question(user_id)
         self.clear_success_message(user_id)
     
     def get_user_stats(self) -> Dict[str, int]:
-        """Получение статистики по пользователям"""
         return {
             "total_users": len(self.user_main_messages),
             "active_questions": len(self.last_question_message_id),
             "success_messages": len(self.success_message_id)
         }
 
-# Экспортируем синглтон-экземпляр для удобного импорта
 message_manager = MessageManager()

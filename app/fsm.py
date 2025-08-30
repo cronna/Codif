@@ -1,7 +1,7 @@
 from aiogram.fsm.state import State, StatesGroup
 
 class ClientOrder(StatesGroup):
-    order_type = State()  # Выбор между ботом и мини-приложением
+    order_type = State()
     project_name = State()
     functionality = State()
     deadlines = State()
@@ -54,14 +54,12 @@ class AdminResponse(StatesGroup):
     payout_notes = State()
 
 class ReferralSystem(StatesGroup):
-    """Состояния реферальной системы"""
     main = State()
     wallet_method = State()
     enter_wallet = State()
     setup_wallet = State()
 
 class OrderManagement(StatesGroup):
-    """Состояния управления заказами"""
     set_price = State()
     add_notes = State()
     confirm_payment = State()

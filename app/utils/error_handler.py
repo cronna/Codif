@@ -1,6 +1,3 @@
-"""
-Модуль для централизованной обработки ошибок и логирования
-"""
 import logging
 import traceback
 import functools
@@ -8,7 +5,6 @@ from typing import Any, Callable, Optional
 from aiogram import types
 from aiogram.exceptions import TelegramAPIError
 
-# Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -21,11 +17,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class ErrorHandler:
-    """Централизованный обработчик ошибок"""
     
     @staticmethod
     def log_error(error: Exception, context: str = "", user_id: Optional[int] = None):
-        """Логирование ошибки с контекстом"""
         error_msg = f"Error in {context}: {str(error)}"
         if user_id:
             error_msg += f" | User: {user_id}"
@@ -35,7 +29,6 @@ class ErrorHandler:
     
     @staticmethod
     def handle_telegram_error(error: TelegramAPIError, message: types.Message = None):
-        """Обработка ошибок Telegram API"""
         user_id = message.from_user.id if message else None
         
         if "message is not modified" in str(error).lower():
@@ -53,7 +46,6 @@ class ErrorHandler:
     
     @staticmethod
     def safe_execute(func: Callable, *args, **kwargs) -> tuple[bool, Any]:
-        """Безопасное выполнение функции с обработкой ошибок"""
         try:
             result = func(*args, **kwargs)
             return True, result
@@ -62,7 +54,6 @@ class ErrorHandler:
             return False, None
 
 def error_handler(context: str = ""):
-    """Декоратор для обработки ошибок в функциях"""
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -95,7 +86,6 @@ def error_handler(context: str = ""):
     return decorator
 
 def safe_message_send(bot, chat_id: int, text: str, **kwargs) -> bool:
-    """Безопасная отправка сообщения"""
     try:
         bot.send_message(chat_id=chat_id, text=text, **kwargs)
         return True
